@@ -14,17 +14,19 @@ static int sizeOfDatabase;
 static int accessesToTheDatabase;
 const unsigned long sizeofRec = sizeof(record);
 
-record** addRecord(record **current, record newRec);
-record** deleteRecord(record **current);
+record* addRecord(record* current, record newRec);
+record* deleteRecord(record* current);
 record createNewRecord();
-void printDatabase(record **database);
+void printDatabase(record* database);
 
 int main(int argc, char const *argv[]) {
-  record **currentDB = NULL;
+  record* currentDB = NULL;
+
+
 
   while (1) {
 
-    int choice;
+    int choice = 0;
     printf("MENU\n=======\n");
     printf("1. Print all records\n2. Print number of records\n");
     printf("3. Print size of database\n4. Add record\n");
@@ -32,6 +34,7 @@ int main(int argc, char const *argv[]) {
     printf("6. Print number of accesses to database\n7. Exit\n");
 
     scanf("%d", &choice);
+    while ((getchar()) != '\n');
 
     switch (choice) {
     case 1:
@@ -61,33 +64,24 @@ int main(int argc, char const *argv[]) {
   return 0;
 }
 
-record** addRecord(record **current, record newRec) {
+record* addRecord(record *current, record newRec) {
 
-     record** newCurrent = malloc((sizeOfDatabase + 1) * sizeofRec);
+     record* newCurrent = malloc((sizeOfDatabase + 1) * sizeofRec);
 
      int i = 0;
-    for (i = 0; i < sizeOfDatabase; i++) {
-      memcpy(&newCurrent[i], (void *)&current[i], sizeofRec);
-      record* temp = (record*)&newCurrent[i];
-      fprintf(stderr, "Record #%d\n\tFirstname: %s\n\tLastname: %s\n\tAge: %d\n", (i+1),temp->firstName, temp->lastName, temp->age);
 
+     record* nextNew = newCurrent;
+     record* nextCurrent = current;
+     for (i = 0; i < sizeOfDatabase; i++) {
+      memcpy(nextNew, nextCurrent, sizeofRec);
+      nextNew = nextNew + sizeofRec;
+      nextCurrent = nextCurrent + sizeofRec;
     }
     if (current != NULL) {
       free(current);
     }
 
-
-    memcpy(&newCurrent[sizeOfDatabase], (void *)&newRec, sizeofRec);
-
-    record* temp = (record*)&newCurrent[sizeOfDatabase];
-    fprintf(stderr, "Record #%d\n\tFirstname: %s\n\tLastname: %s\n\tAge: %d\n", (sizeOfDatabase+1),temp->firstName, temp->lastName, temp->age);
-    if (sizeOfDatabase > 0) {
-      record* temp = (record*)&newCurrent[sizeOfDatabase-1];
-      fprintf(stderr, "Record #%d\n\tFirstname: %s\n\tLastname: %s\n\tAge: %d\n", (sizeOfDatabase),temp->firstName, temp->lastName, temp->age);
-    }
-    // record* temp = &newCurrent[sizeOfDatabase];
-    //
-    // fprintf(stderr, "after set struct: %s\n", temp->firstName);
+    memcpy(nextNew, &newRec, sizeofRec);
     sizeOfDatabase++;
     accessesToTheDatabase++;
 
@@ -95,22 +89,24 @@ record** addRecord(record **current, record newRec) {
 
 }
 
-record** deleteRecord(record **current){
+record* deleteRecord(record* current){
     if (sizeOfDatabase == 0) {
       fprintf(stderr, "There is nothing in the Database.\n");
       return NULL;
     }
-    record **newCurrent = NULL;
+    record* newCurrent = NULL;
     if (sizeOfDatabase > 1) {
       newCurrent = malloc((sizeOfDatabase - 1) * (sizeofRec));
     }
     sizeOfDatabase--;
 
-    int i;
-    for (i = 0; i < sizeOfDatabase; i++) {
-      fprintf(stderr, "I got here3\n");
-      memcpy(&newCurrent[i], (void *)&current[i], sizeofRec);
-    }
+    record* nextNew = newCurrent;
+    record* nextCurrent = current;
+    for (int i = 0; i < sizeOfDatabase; i++) {
+     memcpy(nextNew, nextCurrent, sizeofRec);
+     nextNew = nextNew + sizeofRec;
+     nextCurrent = nextCurrent + sizeofRec;
+   }
 
     free(current);
     accessesToTheDatabase++;
@@ -122,9 +118,9 @@ record createNewRecord() {
   char last[100];
   int age;
   printf("Enter first name:\n");
-  scanf("%s", &first);
+  scanf("%s", (char *)&first);
   printf("Enter last name:\n");
-  scanf("%s", &last);
+  scanf("%s", (char *)&last);
   printf("Enter age:\n");
   scanf("%d", &age);
   record rec;
@@ -138,13 +134,20 @@ record createNewRecord() {
   return rec;
 }
 
-void printDatabase(record **database){
+void printDatabase(record* database){
   if (sizeOfDatabase == 0) {
     fprintf(stderr, "There are no entries into the database yet.\n");
   }
+  // for (int i = 0; i < sizeOfDatabase; i++) {
+  //   record* temp = (record*)&database[i];
+  //   fprintf(stderr, "Record #%d\n\tFirstname: %s\n\tLastname: %s\n\tAge: %d\n", (i+1),temp->firstName, temp->lastName, temp->age);
+  // }
+  record* x = database;
   for (int i = 0; i < sizeOfDatabase; i++) {
-    record* temp = (record*)&database[i];
-    fprintf(stderr, "Record #%d\n\tFirstname: %s\n\tLastname: %s\n\tAge: %d\n", (i+1),temp->firstName, temp->lastName, temp->age);
+   fprintf(stderr, "Record #%d\n\tFirstname: %s\n\tLastname: %s\n\tAge: %d\n", (i+1),x->firstName, x->lastName, x->age);
+   x = x + sizeofRec;
   }
+
+
   accessesToTheDatabase++;
 }
